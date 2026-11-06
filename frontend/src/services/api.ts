@@ -1,4 +1,5 @@
-export const API_BASE_URL = import.meta.env?.VITE_API_URL || 'http://localhost:9900'
+// Same origin by default: the dev server and a self-hosted site both route API paths to the backend.
+export const API_BASE_URL = import.meta.env?.VITE_API_URL || ''
 
 export interface HelpResponse {
   title: string

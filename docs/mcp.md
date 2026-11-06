@@ -42,7 +42,7 @@ Current text holds 5,000 Unicode characters. Requests share 60/minute and 10/sec
 
 ## Local check
 
-Start `./dev.sh`, then run:
+Start bboard with `python3 scripts/dev.py`, then run:
 
 ```sh
 backend/.venv/bin/python scripts/mcp_demo.py --phase protocol

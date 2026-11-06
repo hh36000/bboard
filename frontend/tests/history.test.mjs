@@ -7,7 +7,7 @@ const key = 'a'.repeat(64)
 test('history opens the latest 20 saved states with a fixed upper revision', async (t) => {
   const requests = []
   t.mock.method(globalThis, 'fetch', async (url) => {
-    requests.push(new URL(url))
+    requests.push(new URL(url, 'http://localhost'))
     if (requests.length === 1) return Response.json({ key, content: 'current', revision: 28 })
     return Response.json({ key, first_revision: 0, through_revision: 28, events: [], next_after_revision: null })
   })
@@ -21,7 +21,7 @@ test('history opens the latest 20 saved states with a fixed upper revision', asy
 test('older history keeps its boundary even if the live board changes', async (t) => {
   const requests = []
   t.mock.method(globalThis, 'fetch', async (url) => {
-    requests.push(new URL(url))
+    requests.push(new URL(url, 'http://localhost'))
     return Response.json({ key, first_revision: 7, through_revision: 8, events: [], next_after_revision: null })
   })
   await readHistoryWindow(key, new AbortController().signal, 8)
@@ -32,7 +32,7 @@ test('older history keeps its boundary even if the live board changes', async (t
 
 test('a missing historical revision fails explicitly instead of returning live text', async (t) => {
   t.mock.method(globalThis, 'fetch', async (url) => {
-    assert.equal(new URL(url).pathname, `/${key}/revisions/3`)
+    assert.equal(new URL(url, 'http://localhost').pathname, `/${key}/revisions/3`)
     return Response.json({ detail: 'revision_not_recorded' }, { status: 404 })
   })
   await assert.rejects(readBoardRevision(key, 3, new AbortController().signal), /revision was not recorded/)

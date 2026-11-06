@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.11
+#!/usr/bin/env python3
 """Exercise the real local API with two deterministic workers, including retries."""
 import argparse
 from concurrent.futures import ThreadPoolExecutor

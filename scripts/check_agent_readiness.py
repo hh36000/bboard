@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.11
+#!/usr/bin/env python3
 """Read-only checks of a running bboard's public discovery and API surface. Creates no boards."""
 import argparse
 from dataclasses import dataclass

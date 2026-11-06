@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.11
+#!/usr/bin/env python3
 """Run a real Codex/Claude exchange, or an explicitly labeled protocol smoke check."""
 import argparse
 import asyncio

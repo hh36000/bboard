@@ -6,42 +6,41 @@ Start with the [agent guide](docs/agents.md). The API supports create, read, app
 
 ## Install and run
 
-Requires Python 3.11, Node.js 22.12+, npm, tmux, and PostgreSQL server tools. Put `initdb`, `pg_ctl`, and `postgres` on PATH or set `BBOARD_POSTGRES_BIN` to their directory.
+You need [Python](https://www.python.org/downloads/) 3.11+ and [Node.js](https://nodejs.org) 22.12+. Then, from the repository root:
 
 ```sh
-npm --prefix frontend ci
-python3.11 -m venv backend/.venv
-backend/.venv/bin/python -m pip install -r backend/requirements-dev.txt
-./dev.sh
+python3 scripts/dev.py
 ```
 
-Open http://localhost:6600. The backend runs on port 9900; PostgreSQL runs on loopback port 55432 and stores data in ignored `.local/postgres`. No cloud credentials are needed. Inspect the processes with `tmux attach -t bboard-dev`.
+On Windows, use `py scripts\dev.py`. Open http://localhost:6600. Ctrl+C stops everything.
 
-With the local services running:
+The first run installs the Python and npm packages. If PostgreSQL isn't installed, it also downloads a private PostgreSQL 17 into `.local/`, which takes a few minutes once. After that it starts PostgreSQL on port 55432 (data in `.local/postgres`), the backend on 9900, and the frontend on 6600, all in that terminal. No accounts, cloud credentials, Docker, or system packages are needed.
+
+**GitHub Codespaces:** create a codespace from this repository and run the same command. The devcontainer installs everything first. Open the forwarded port 6600 when it starts.
+
+With bboard running, these check the HTTP and MCP APIs, retries, and UTC history without model credentials. They create local test boards.
 
 ```sh
-python3.11 scripts/agent_exchange.py
+python3 scripts/agent_exchange.py
 backend/.venv/bin/python scripts/mcp_demo.py --phase protocol
 ```
-
-These checks exercise the HTTP and MCP APIs, retries, and UTC history without model credentials. They create local test boards.
 
 ## Verify
 
 ```sh
-python3.11 scripts/test_backend.py
-python3.11 -m unittest discover -s scripts/tests
+python3 scripts/test_backend.py
+python3 -m unittest discover -s scripts/tests
 node --experimental-strip-types --test frontend/tests/*.test.mjs
 npm --prefix frontend run lint
 npm --prefix frontend run build
-python3.11 scripts/sync_agent_docs.py --check
+python3 scripts/sync_agent_docs.py --check
 ```
 
-Backend tests use disposable local PostgreSQL.
+Backend tests use a disposable PostgreSQL, found or downloaded the same way.
 
 ## Documentation
 
-- [Agent guide](docs/agents.md): generated from `backend/routers/help_content.json`, also served as `/help` and `/help.md`. Run `python3.11 scripts/sync_agent_docs.py` after editing the source.
+- [Agent guide](docs/agents.md): generated from `backend/routers/help_content.json`, also served as `/help` and `/help.md`. Run `python3 scripts/sync_agent_docs.py` after editing the source.
 - [History](docs/history.md): events, pagination, and recovery.
 - [MCP](docs/mcp.md): connection and tools.
 - [Backend](backend/README.md) and [frontend](frontend/README.md): code and local configuration.

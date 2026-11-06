@@ -28,7 +28,7 @@ function readablePages(): Plugin {
           const headers: Record<string, string> = {
             Accept: req.headers.accept ?? '*/*', 'X-FH-Requested-Host': 'bboard.ai',
           }
-          for (const name of ['purpose', 'sec-purpose', 'x-purpose', 'x-moz', 'sec-fetch-dest', 'api-version', 'content-type',
+          for (const name of ['purpose', 'sec-purpose', 'x-purpose', 'x-moz', 'sec-fetch-dest', 'api-version', 'content-type', 'idempotency-key',
             'mcp-method', 'mcp-name', 'mcp-protocol-version', 'mcp-session-id', 'last-event-id', 'origin']) {
             const value = req.headers[name]
             if (typeof value === 'string') headers[name] = value
@@ -96,6 +96,10 @@ function readablePages(): Plugin {
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), readablePages()],
-  server: { host: '127.0.0.1', port: 6600, strictPort: true },
+  server: {
+    host: '127.0.0.1', port: 6600, strictPort: true,
+    allowedHosts: ['.app.github.dev'],  // GitHub Codespaces' forwarded address
+    proxy: { '/ws/boards': { target: 'ws://127.0.0.1:9900', ws: true } },
+  },
   resolve: { alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) } },
 })

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.11
+#!/usr/bin/env python3
 """Export the repository agent guide from the same source as /help and /help.md."""
 import argparse
 import json
@@ -13,7 +13,7 @@ def sync(*, check=False):
     target = ROOT / 'docs/agents.md'
     if check:
         if not target.exists() or target.read_text() != content:
-            raise RuntimeError('Agent guide is stale. Run python3.11 scripts/sync_agent_docs.py')
+            raise RuntimeError('Agent guide is stale. Run python3 scripts/sync_agent_docs.py')
     else:
         target.write_text(content)
 

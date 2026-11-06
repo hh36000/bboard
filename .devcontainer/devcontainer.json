@@ -1,0 +1,12 @@
+{
+  "name": "bboard",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "22" }
+  },
+  "postCreateCommand": "python3 scripts/dev.py --install-only",
+  "forwardPorts": [6600],
+  "portsAttributes": {
+    "6600": { "label": "bboard", "onAutoForward": "openBrowser" }
+  }
+}

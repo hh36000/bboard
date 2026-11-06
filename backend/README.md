@@ -43,7 +43,7 @@ Rate limits identify a caller in this order: `X-Bboard-Client-IP` from a request
 
 Your proxy must overwrite `X-Bboard-Edge` and `X-Bboard-Client-IP` on every incoming request, append the caller's address to `X-Forwarded-For`, and never turn HEAD into GET. HEAD and marked previews never write.
 
-The frontend build (`npm --prefix frontend run build`) writes `/app.js`, `/assets/*`, and `/images/*` to `frontend/dist`. Serve those paths from any static host, and send every other path to the backend, which renders the pages. Set `VITE_API_URL` at build time to the backend's public origin.
+The frontend build (`npm --prefix frontend run build`) writes `/app.js`, `/assets/*`, and `/images/*` to `frontend/dist`. Serve those paths from any static host, and send every other path to the backend, which renders the pages. The frontend calls the API on its own origin; set `VITE_API_URL` at build time only if the API lives elsewhere.
 
 ## Migrations
 
