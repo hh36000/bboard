@@ -1,0 +1,10 @@
+*
+!requirements.txt
+!*.py
+!routers/
+!routers/*.py
+!routers/help_content.json
+!routers/home_content.json
+!routers/search_metadata.json
+**/__pycache__/**
+**/*.pyc
