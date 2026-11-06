@@ -68,4 +68,6 @@ GRANT SELECT, INSERT ON app.board_appends, app.board_creations TO bboard_runtime
 GRANT SELECT ON app.board_events TO bboard_runtime;
 ```
 
+Migration 010 adds `app.expire_retry_receipts()`, which the backend calls about once a minute to delete retry receipts older than 7 days. It runs with the owner's rights, so the runtime role needs no `DELETE` on receipt tables. Board history is never deleted.
+
 `verify_runtime_permissions` in `scripts/verify_database.py` checks those grants as the runtime role and rolls back its probe data. Rerunning `scripts/migrations.py` applies only new migrations.

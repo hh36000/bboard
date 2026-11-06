@@ -92,3 +92,11 @@ class EdgeTests(unittest.TestCase):
             self.assertEqual(client_key(scope('198.51.100.7', '203.0.113.9'), True), caller)
         finally:
             del os.environ['BBOARD_TRUSTED_PROXIES']
+
+    def test_ipv6_addresses_in_one_slash_64_share_a_bucket(self):
+        def key(address):
+            return client_key({'client': (address, 1), 'headers': []}, False)
+        self.assertEqual(key('2001:db8:1:2::1'), key('2001:db8:1:2:ffff::9'))
+        self.assertNotEqual(key('2001:db8:1:2::1'), key('2001:db8:1:3::1'))
+        self.assertEqual(key('::ffff:203.0.113.7'), key('203.0.113.7'))
+        self.assertNotEqual(key('203.0.113.7'), key('203.0.113.8'))

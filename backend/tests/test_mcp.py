@@ -13,6 +13,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
 
 from main import app
+from mcp_server import MCPGateway
 from realtime import DocumentStore
 from security import RateLimitDecision
 from test_realtime import receive_until
@@ -57,6 +58,22 @@ class MCPBoundaryTests(unittest.TestCase):
         self.addCleanup(self.client.__exit__, None, None, None)
         app.state.limiter = MagicMock(consume_with_status=MagicMock(
             return_value=RateLimitDecision(0, 9, 59, 1, 60)))
+
+    def test_stalled_body_times_out_before_the_sdk(self):
+        sent = []
+        async def receive():
+            if not sent:
+                sent.append('first')
+                return {'type': 'http.request', 'body': b'{', 'more_body': True}
+            await asyncio.sleep(3600)  # The client never sends the rest.
+        async def send(message):
+            sent.append(message)
+        scope = {'type': 'http', 'method': 'POST', 'path': '/mcp', 'headers': []}
+        sdk = MagicMock()
+        with patch('mcp_server.MCP_BODY_SECONDS', 0.05):
+            asyncio.run(asyncio.wait_for(MCPGateway(MagicMock(state=MagicMock(mcp_http_app=sdk)))(scope, receive, send), 5))
+        self.assertEqual(sent[1]['status'], 408)
+        sdk.assert_not_called()
 
     def test_both_protocol_eras_discover_board_and_history_tools(self):
         response, initialized = rpc(self.client, 'initialize', {'protocolVersion': '2025-11-25',

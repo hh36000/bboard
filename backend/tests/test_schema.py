@@ -88,3 +88,30 @@ class SchemaTests(unittest.TestCase):
         finally:
             self.owner.cursor().execute('REVOKE CREATE ON SCHEMA app FROM bboard_permission_probe')
             self.owner.commit()
+
+    def test_runtime_expires_only_week_old_retry_receipts(self):
+        cursor = self.connection.cursor()
+        board = 'e' * 64
+        try:
+            cursor.execute("INSERT INTO app.boards (id, content) VALUES (%s, 'kept')", (board,))
+            for age, op in (('8 days', '00000000-0000-4000-8000-000000000001'), ('1 day', '00000000-0000-4000-8000-000000000002')):
+                cursor.execute("INSERT INTO app.board_appends (board_id, operation_id, content_hash, revision, recorded_at) "
+                               "VALUES (%s, %s, %s, 1, now() - CAST(%s AS interval))", (board, op, 'a' * 64, age))
+                cursor.execute("INSERT INTO app.board_creations (operation_id, board_id, content_hash, recorded_at) "
+                               "VALUES (%s, %s, %s, now() - CAST(%s AS interval))", (op, board, 'a' * 64, age))
+                cursor.execute("INSERT INTO app.board_writers (document_id, client_id, sequence, revision, updated_at) "
+                               "VALUES (%s, %s, 1, 1, now() - CAST(%s AS interval))", (board, op, age))
+            cursor.execute('SELECT count(*) FROM app.board_events WHERE board_id = %s', (board,))
+            events = cursor.fetchone()[0]
+            # The runtime role has no DELETE on receipts; the owner-defined function expires them.
+            cursor.execute('SELECT app.expire_retry_receipts()')
+            for table, column in (('board_appends', 'operation_id'), ('board_creations', 'operation_id'), ('board_writers', 'client_id')):
+                cursor.execute(f'SELECT {column}::text FROM app.{table}')
+                self.assertEqual(list(cursor.fetchall()), [['00000000-0000-4000-8000-000000000002']], table)
+            cursor.execute('SELECT count(*) FROM app.board_events WHERE board_id = %s', (board,))
+            self.assertEqual(cursor.fetchone()[0], events)
+            cursor.execute('SELECT content FROM app.boards WHERE id = %s', (board,))
+            self.assertEqual(cursor.fetchone()[0], 'kept')
+        finally:
+            self.connection.rollback()
+        self.assert_no_probe_data()

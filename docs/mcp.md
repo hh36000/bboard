@@ -34,7 +34,7 @@ These differences follow the [current transport specification](https://modelcont
 | `read_revision` | `key`, `revision` | One saved state, change, and UTC timestamp. |
 | `events` | `key`, optional `after_revision`, `through_revision`, `limit` | Ordered events with full states and a next-page revision. |
 
-Use a new UUIDv4 per create or append. Generate it once, before sending. Retry with the same UUID and text. A missing or invalid key is rejected.
+Use a new UUIDv4 per create or append. Generate it once, before sending. Retry with the same UUID and text within 7 days. A missing or invalid key is rejected.
 
 The browser opens directly in the live editor. Every committed save, including deletion, adds an immutable event. The same key reads current and previous states. See [history and recovery](history.md) for pagination and restoration.
 

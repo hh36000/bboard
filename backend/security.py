@@ -78,6 +78,10 @@ RETURNING CASE
 ''')
 
 
+# Board pages are interactive; never let another site frame them (clickjacking).
+FRAMING_HEADERS = {'Content-Security-Policy': "frame-ancestors 'none'", 'X-Frame-Options': 'DENY'}
+
+
 class PostgresLimiter:
     def __init__(self, engine, *, per_second=PER_SECOND, per_minute=PER_MINUTE, namespace=''):
         self.engine = engine
@@ -115,6 +119,13 @@ class PostgresLimiter:
                         LIMIT 1000 FOR UPDATE SKIP LOCKED)'''))
             except Exception:
                 logger.warning('Rate-limit cleanup deferred')
+            if not self.namespace:
+                try:
+                    with self.engine.begin() as connection:
+                        connection.execute(text("SET LOCAL statement_timeout = '2s'"))
+                        connection.execute(text('SELECT app.expire_retry_receipts()'))
+                except Exception:
+                    logger.warning('Retry receipt expiry deferred')
         return decision
 
 
@@ -166,7 +177,9 @@ def client_key(scope, production):
         address = ipaddress.ip_address(raw)
         if isinstance(address, ipaddress.IPv6Address) and address.ipv4_mapped:
             address = address.ipv4_mapped
-        normalized = str(address)
+        # One subscriber usually holds a whole IPv6 /64, so it shares one budget.
+        normalized = (str(ipaddress.ip_network(f'{address}/64', strict=False))
+                      if isinstance(address, ipaddress.IPv6Address) else str(address))
     except ValueError:
         # Missing/invalid trusted identity shares a bucket; never trust a fallback header.
         normalized = 'unknown'
@@ -190,7 +203,7 @@ class SecurityMiddleware:
                     message = {**message, 'body': b''}
                 await original_send(message)
         state = scope['app'].state
-        headers = {'Cache-Control': 'no-store', 'API-Version': '1'}
+        headers = {'Cache-Control': 'no-store', 'API-Version': '1', **FRAMING_HEADERS}
         origin = Headers(scope=scope).get('origin')
         if origin in self.origins:
             headers.update({'Access-Control-Allow-Origin': origin, 'Vary': 'Origin',
@@ -224,6 +237,7 @@ class SecurityMiddleware:
                                 response_headers.extend([(b'cache-control', b'no-store'), (b'x-robots-tag', b'noindex, noarchive')])
                             response_headers.append((b'x-bboard-access-policy', b'agent-pages-v7'))
                             response_headers.append((b'api-version', b'1'))
+                            response_headers.extend((name.lower().encode(), value.encode()) for name, value in FRAMING_HEADERS.items())
                             response_headers.extend((name.lower().encode(), value.encode()) for name, value in decision.headers().items())
                         await send(message)
                     if not preflight and Headers(scope=scope).get('api-version', '1') != '1':

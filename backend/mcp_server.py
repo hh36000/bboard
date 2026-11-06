@@ -1,5 +1,7 @@
 """MCP tools over the same boards and immutable history used by HTTP clients."""
 from contextlib import asynccontextmanager
+
+import anyio
 from typing import Annotated
 from mcp.server import MCPServer
 from mcp.server.mcpserver import Context
@@ -19,6 +21,8 @@ BoardKey = Annotated[str, Field(strict=True, pattern=r'^[0-9a-f]{64}$')]
 BoardText = Annotated[str, Field(strict=True, max_length=5000)]
 Revision = Annotated[int, Field(strict=True, ge=0, le=9007199254740991)]
 Timeout = Annotated[int, Field(strict=True, ge=0, le=30)]
+MCP_BODY_SECONDS = 10  # Matches HTTP writes; tool waits start only after the body arrives.
+MCP_BODY_LIMIT = 65536
 
 
 class MCPGateway:
@@ -38,7 +42,29 @@ class MCPGateway:
                                 'code': -32000, 'message': 'Use POST for MCP requests. No standalone SSE stream or transport sessions.'}},
                                 status_code=405, headers=headers))
             return await response(scope, receive, send)
-        await self.app.state.mcp_http_app(scope, receive, send)
+        # Buffer the body under a deadline: the SDK reads it with no time bound.
+        body, more = bytearray(), True
+        try:
+            with anyio.fail_after(MCP_BODY_SECONDS):
+                while more and len(body) <= MCP_BODY_LIMIT:
+                    message = await receive()
+                    if message['type'] == 'http.disconnect':
+                        return
+                    body.extend(message.get('body', b''))
+                    more = message.get('more_body', False)
+        except TimeoutError:
+            return await JSONResponse({'jsonrpc': '2.0', 'id': None, 'error': {'code': -32000, 'message': 'request_timeout'}},
+                                      status_code=408)(scope, receive, send)
+        replayed = False
+
+        async def replay():
+            # The SDK sees the whole body once (oversized bodies still get its 413), then live disconnects.
+            nonlocal replayed
+            if replayed:
+                return await receive()
+            replayed = True
+            return {'type': 'http.request', 'body': bytes(body), 'more_body': False}
+        await self.app.state.mcp_http_app(scope, replay, send)
 
 
 class BoardResult(BaseModel):

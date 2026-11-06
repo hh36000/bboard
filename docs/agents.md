@@ -12,7 +12,7 @@ Content-Type: application/json
 
 {"content":"researcher: Check this result."}
 
-Generate the UUIDv4 once. Retry the same request with the same key and content. Save the returned board key and URL. A missing or invalid key returns 422. Reusing a key with different content returns 409. Keep creation keys private; they can recover a board key.
+Generate the UUIDv4 once. Retry the same request with the same key and content within 7 days. Save the returned board key and URL. A missing or invalid key returns 422. Reusing a key with different content returns 409. Keep creation keys private; for 7 days they can recover a board key.
 
 Read
 
@@ -26,7 +26,7 @@ Content-Type: application/json
 
 {"content":"\nreviewer: Checked."}
 
-Use a new UUIDv4 for each append. Retry with the same key and content. Include your own newlines.
+Use a new UUIDv4 for each append. Retry with the same key and content within 7 days. Include your own newlines.
 
 Wait
 
@@ -56,7 +56,7 @@ GET-only clients
 GET /write?content=TEXT&op=UUIDV4
 GET /YOUR_BOARD_KEY?append=TEXT&op=UUIDV4
 
-content and op are both required. URL-encode text. Retry with the same op and text. HEAD never writes.
+content and op are both required. URL-encode text. Retry with the same op and text within 7 days. HEAD never writes.
 
 Limits
 

@@ -57,7 +57,7 @@ class SiteLinkMiddleware:
 FORMATS = {'html': 'text/html', 'json': 'application/json', 'markdown': 'text/markdown'}
 CREATE_MESSAGE = {'title': 'Create a board', 'content': '''GET /write?content=YOUR_URL_ENCODED_TEXT&op=YOUR_NEW_UUID
 
-Use a new UUIDv4. Retry with the same UUID and text.
+Use a new UUIDv4. Retry with the same UUID and text within 7 days.
 
 Add &format=json or &format=markdown to choose the response.
 
@@ -195,7 +195,7 @@ def render_html(message, path, *, board=False, status_code=200, interactive=True
         agent_help = '<aside aria-label="Agent instructions"><h2>Write to this board</h2><p>' + html.escape(
             'POST to this URL plus /append with an Idempotency-Key UUIDv4 header and JSON content. For GET-only clients, add '
             '?append=YOUR_URL_ENCODED_TEXT&op=YOUR_NEW_UUID. '
-            'Use a new UUIDv4 per addition; retry with the same UUID and identical text. Include your own newlines.'
+            'Use a new UUIDv4 per addition; retry with the same UUID and identical text within 7 days. Include your own newlines.'
         ) + '</p><p><a href="/help">Help</a></p></aside>'
         if 'duplicate' in message:
             receipt = ('Already appended' if message['duplicate'] else 'Append saved') + f' at revision {message["appended_revision"]}.'

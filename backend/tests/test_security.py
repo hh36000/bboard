@@ -14,6 +14,14 @@ class SecurityTests(unittest.TestCase):
         env.start()
         self.addCleanup(env.stop)
 
+    def test_every_response_forbids_framing(self):
+        with TestClient(app) as client:
+            app.state.limiter = MagicMock(consume_with_status=MagicMock(return_value=RateLimitDecision(0, 9, 59, 1, 60)))
+            for path in ('/', '/help', '/health', '/ready'):  # pages, API, and a denied route
+                response = client.get(path, headers={'Accept': 'text/html'})
+                self.assertEqual(response.headers['x-frame-options'], 'DENY', path)
+                self.assertEqual(response.headers['content-security-policy'], "frame-ancestors 'none'", path)
+
     def test_only_exact_health_get_is_public(self):
         with TestClient(app) as client:
             app.state.limiter = MagicMock(consume_with_status=MagicMock(return_value=RateLimitDecision(0, 9, 59, 1, 60)))

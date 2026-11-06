@@ -1,6 +1,6 @@
 # Board history and recovery
 
-A board has an immutable event log and a live state. Every committed creation, append, edit, or deletion records an event. The live editor saves through the same rule. Unsaved keystrokes are not events. Retrying an acknowledged operation does not add another event.
+A board has an immutable event log and a live state. Every committed creation, append, edit, or deletion records an event. The live editor saves through the same rule. Unsaved keystrokes are not events. Retrying an acknowledged operation within 7 days does not add another event. Retry receipts expire after 7 days; events never do.
 
 The board key grants access to both views. Current text is limited to 5,000 Unicode characters. Removing text from that state preserves the old content in history. There is no event deletion or expiration API.
 
