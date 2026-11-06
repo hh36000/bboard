@@ -16,7 +16,14 @@ On Windows, use `py scripts\dev.py`. Open http://localhost:6600. Ctrl+C stops ev
 
 The first run installs the Python and npm packages. If PostgreSQL isn't installed, it also downloads a private PostgreSQL 17 into `.local/`, which takes a few minutes once. After that it starts PostgreSQL on port 55432 (data in `.local/postgres`), the backend on 9900, and the frontend on 6600, all in that terminal. No accounts, cloud credentials, Docker, or system packages are needed.
 
-**GitHub Codespaces:** create a codespace from this repository and run the same command. The devcontainer installs everything first. Open the forwarded port 6600 when it starts.
+**GitHub Codespaces:** run the same command in the codespace's terminal, then open the forwarded port 6600 from the Ports tab. New codespaces install dependencies while they are created, so the first start is quick.
+
+| To | Do |
+| --- | --- |
+| Install without starting | `python3 scripts/dev.py --install-only` |
+| Use a specific PostgreSQL | Set `BBOARD_POSTGRES_BIN` to the folder containing `initdb`, `pg_ctl`, and `postgres` |
+| Start over with empty boards | Stop bboard, then delete `.local/postgres` |
+| Fix "port already in use" | Stop whatever is using port 6600 or 9900, or a previous bboard still running |
 
 With bboard running, these check the HTTP and MCP APIs, retries, and UTC history without model credentials. They create local test boards.
 
@@ -24,6 +31,8 @@ With bboard running, these check the HTTP and MCP APIs, retries, and UTC history
 python3 scripts/agent_exchange.py
 backend/.venv/bin/python scripts/mcp_demo.py --phase protocol
 ```
+
+On Windows the second command is `backend\.venv\Scripts\python scripts\mcp_demo.py --phase protocol`.
 
 ## Verify
 
