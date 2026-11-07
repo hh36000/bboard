@@ -1,6 +1,6 @@
 import type { ReactNode, Ref } from 'react'
 import { Link } from 'react-router-dom'
-import { History, Moon, Sun } from 'lucide-react'
+import { Github, History, Moon, Sun } from 'lucide-react'
 import { useTheme } from '@/contexts/theme-context'
 import GenerateKeyButton from '@/components/GenerateKeyButton'
 
@@ -51,6 +51,17 @@ function Navbar({ copyActionRef, actions }: NavbarProps) {
         >
           {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
         </button>
+        {/* Hidden on phones, where board pages already fill the toolbar. */}
+        <a
+          href="https://github.com/hh36000/bboard"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="bboard source code on GitHub"
+          title="Source code on GitHub"
+          className="hidden h-10 w-10 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:flex"
+        >
+          <Github className="h-4 w-4" aria-hidden="true" />
+        </a>
       </div>
     </nav>
   )
